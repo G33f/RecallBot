@@ -7,21 +7,28 @@ import (
 	"strconv"
 )
 
-type BotInterface struct {
+type botInterface struct {
 	button buttons.Buttons
 	date   date.Date
 }
 
+type BotInterface interface {
+	CreateButtons()
+	OpenSelector(msg *tgbotapi.MessageConfig)
+	CloseSelector(msg *tgbotapi.MessageConfig)
+}
+
 func New(year int, month int, day int) BotInterface {
-	var tmp BotInterface
+	var tmp botInterface
+	tmp.date = date.New()
 	tmp.date.SetYear(year)
 	tmp.date.SetMonth(month)
 	tmp.date.SetDay(day)
 	tmp.CreateButtons()
-	return tmp
+	return &tmp
 }
 
-func (bi BotInterface) countLine() int {
+func (bi botInterface) countLine() int {
 	days, spaces := bi.date.GetMaxDayInMonth(), bi.date.GetMonthStartWeekDay()
 	if (days+spaces)%7 != 0 {
 		return (days+spaces)/7 + 1
@@ -30,7 +37,7 @@ func (bi BotInterface) countLine() int {
 	}
 }
 
-func (bi BotInterface) makeMonthDayNumbersInStringArray() []string {
+func (bi botInterface) makeMonthDayNumbersInStringArray() []string {
 	days := bi.date.GetMaxDayInMonth()
 	str := make([]string, days, days)
 	for i := 0; i < days; i++ {
@@ -39,14 +46,14 @@ func (bi BotInterface) makeMonthDayNumbersInStringArray() []string {
 	return str
 }
 
-func (bi *BotInterface) CreateButtons() {
+func (bi *botInterface) CreateButtons() {
 	bi.button = buttons.New(bi.makeMonthDayNumbersInStringArray(), bi.countLine(), bi.date.GetDayInWeek(), bi.date.GetMonthStartWeekDay())
 }
 
-func (bi *BotInterface) OpenSelector(msg *tgbotapi.MessageConfig) {
+func (bi *botInterface) OpenSelector(msg *tgbotapi.MessageConfig) {
 	bi.button.OpenButtonsBar(msg)
 }
 
-func (bi *BotInterface) CloseSelector(msg *tgbotapi.MessageConfig) {
+func (bi *botInterface) CloseSelector(msg *tgbotapi.MessageConfig) {
 	bi.button.OpenButtonsBar(msg)
 }

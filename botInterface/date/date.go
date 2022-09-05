@@ -5,20 +5,7 @@ import (
 	"time"
 )
 
-//type Dates interface {
-//	SetYear()
-//	SetMonth()
-//	SetDay()
-//	GetMonthStartWeekDay()
-//	GetMaxDayInMonth()
-//	GetDayInWeek()
-//
-//	setMaxDayInMonth()
-//	setMonthStartWeekDay()
-//	setDayInWeek()
-//}
-
-type Date struct {
+type date struct {
 	year              int
 	month             int
 	day               int
@@ -27,15 +14,31 @@ type Date struct {
 	dayInWeek         int
 }
 
-func (d *Date) setDayInWeek() {
+type Date interface {
+	setDayInWeek()
+	setMaxDayInMonth()
+	setMonthStartWeekDay()
+	SetYear(year int)
+	SetMonth(month int)
+	SetDay(day int)
+	GetMonthStartWeekDay() int
+	GetMaxDayInMonth() int
+	GetDayInWeek() int
+}
+
+func New() Date {
+	return &date{}
+}
+
+func (d *date) setDayInWeek() {
 	d.dayInWeek = 7
 }
 
-func (d *Date) setMaxDayInMonth() {
+func (d *date) setMaxDayInMonth() {
 	d.maxDayInMonth = dt.DaysIn(d.year, time.Month(d.month))
 }
 
-func (d *Date) setMonthStartWeekDay() {
+func (d *date) setMonthStartWeekDay() {
 	m := dt.New(d.year, time.Month(d.month), 1)
 	switch m.Weekday().String() {
 	case "Monday":
@@ -55,28 +58,28 @@ func (d *Date) setMonthStartWeekDay() {
 	}
 }
 
-func (d *Date) SetYear(year int) {
+func (d *date) SetYear(year int) {
 	d.year = year
 }
 
-func (d *Date) SetMonth(month int) {
+func (d *date) SetMonth(month int) {
 	d.month = month
 	d.setMaxDayInMonth()
 	d.setMonthStartWeekDay()
 	d.setDayInWeek()
 }
 
-func (d *Date) SetDay(day int) {
+func (d *date) SetDay(day int) {
 	d.day = day
 }
 
-func (d Date) GetMonthStartWeekDay() int {
+func (d *date) GetMonthStartWeekDay() int {
 	return d.monthStartWeekDay
 }
-func (d Date) GetMaxDayInMonth() int {
+func (d *date) GetMaxDayInMonth() int {
 	return d.maxDayInMonth
 }
 
-func (d Date) GetDayInWeek() int {
+func (d *date) GetDayInWeek() int {
 	return d.dayInWeek
 }

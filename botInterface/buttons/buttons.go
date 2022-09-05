@@ -4,18 +4,18 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-//type Button interface {
-//	OpenButtonsBar()
-//	CloseButtonsBar()
-//}
-
-type Buttons struct {
+type buttons struct {
 	button       tgbotapi.ReplyKeyboardMarkup
 	isButtonOpen bool
 }
 
+type Buttons interface {
+	OpenButtonsBar(msg *tgbotapi.MessageConfig)
+	CloseButtonsBar(msg *tgbotapi.MessageConfig)
+}
+
 func New(buttonsName []string, linesCount int, buttonsOnEachLine int, spaceBeforeStart int) Buttons {
-	var b Buttons
+	b := buttons{}
 	tmp := spaceBeforeStart
 	var tmpButtonsForAPI = make([][]tgbotapi.KeyboardButton, linesCount, linesCount)
 	for i := 0; i < linesCount; i++ {
@@ -35,15 +35,15 @@ func New(buttonsName []string, linesCount int, buttonsOnEachLine int, spaceBefor
 		tmpButtonsForAPI[i] = tgbotapi.NewKeyboardButtonRow(buttonsLine...)
 	}
 	b.button = tgbotapi.NewReplyKeyboard(tmpButtonsForAPI...)
-	return b
+	return &b
 }
 
-func (b *Buttons) OpenButtonsBar(msg *tgbotapi.MessageConfig) {
+func (b *buttons) OpenButtonsBar(msg *tgbotapi.MessageConfig) {
 	b.isButtonOpen = true
 	msg.ReplyMarkup = b.button
 }
 
-func (b *Buttons) CloseButtonsBar(msg *tgbotapi.MessageConfig) {
+func (b *buttons) CloseButtonsBar(msg *tgbotapi.MessageConfig) {
 	b.isButtonOpen = false
 	msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 }
