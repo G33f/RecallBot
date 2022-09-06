@@ -4,28 +4,61 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"goLangBot/botInterface/buttons"
 	"goLangBot/botInterface/date"
+	"goLangBot/botInterface/testInput"
 	"strconv"
+	"time"
 )
 
 type botInterface struct {
-	button buttons.Buttons
-	date   date.Date
+	button      buttons.Buttons
+	date        date.Date
+	test        testInput.TestInput
+	requestType map[int64]string
+}
+
+func (bi *botInterface) SetYear(year int) {
+	bi.date.SetYear(year)
+}
+
+func (bi botInterface) years() (str []string) {
+	now := time.Now().Year()
+	str = make([]string, 10, 10)
+	for i := 0; i < 10; i++ {
+		str[i] = strconv.Itoa(now + i)
+	}
+	return str
+}
+
+func (bi *botInterface) SelectYear(msg *tgbotapi.MessageConfig) {
+	request := bi.years()
+	bi.button = buttons.New(request, 2, 5, 0)
+	bi.requestType[msg.ChatID] = "year"
+	bi.test.SetRequest(msg.ChatID, request)
+	bi.button.OpenButtonsBar(msg)
+}
+
+func (bi *botInterface) GetInputRequest(msg *tgbotapi.MessageConfig, request string) {
+	switch bi.requestType[msg.ChatID] {
+	case "year":
+		if i, err := strconv.Atoi(request); err == nil {
+			bi.SetYear(i)
+		}
+	}
 }
 
 type BotInterface interface {
-	CreateButtons()
-	OpenSelector(msg *tgbotapi.MessageConfig)
-	CloseSelector(msg *tgbotapi.MessageConfig)
+	SelectYear(msg *tgbotapi.MessageConfig)
+	GetInputRequest(msg *tgbotapi.MessageConfig, request string)
+
+	SetYear(int)
 }
 
-func New(year int, month int, day int) BotInterface {
-	var tmp botInterface
+func New() BotInterface {
+	tmp := new(botInterface)
 	tmp.date = date.New()
-	tmp.date.SetYear(year)
-	tmp.date.SetMonth(month)
-	tmp.date.SetDay(day)
-	tmp.CreateButtons()
-	return &tmp
+	tmp.test = testInput.New()
+	tmp.requestType = make(map[int64]string)
+	return tmp
 }
 
 func (bi botInterface) countLine() int {
@@ -46,7 +79,7 @@ func (bi botInterface) makeMonthDayNumbersInStringArray() []string {
 	return str
 }
 
-func (bi *botInterface) CreateButtons() {
+func (bi *botInterface) CreateDaysButtons() {
 	bi.button = buttons.New(bi.makeMonthDayNumbersInStringArray(), bi.countLine(), bi.date.GetDayInWeek(), bi.date.GetMonthStartWeekDay())
 }
 
