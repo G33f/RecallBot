@@ -1,7 +1,6 @@
 package botInterface
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"goLangBot/botInterface/buttons"
 	"goLangBot/botInterface/date"
@@ -14,7 +13,7 @@ type botInterface struct {
 	button      buttons.Buttons
 	date        date.Date
 	test        testInput.TestInput
-	requestType map[int64]string
+	requestType string
 }
 
 type BotInterface interface {
@@ -22,6 +21,13 @@ type BotInterface interface {
 	GetInputRequest(msg *tgbotapi.MessageConfig, request string) error
 
 	SetYear(int)
+}
+
+func New() BotInterface {
+	tmp := new(botInterface)
+	tmp.date = date.New()
+	tmp.test = testInput.New()
+	return tmp
 }
 
 func (bi *botInterface) SetYear(year int) {
@@ -38,7 +44,7 @@ func (bi *botInterface) SetDay(day int) {
 
 func (bi *botInterface) CompleteRequest(Callback func(int), msg *tgbotapi.MessageConfig, request string) error {
 	var err error
-	if err = bi.test.TestInput(msg.ChatID, request); err != nil {
+	if err = bi.test.TestInput(request); err != nil {
 		return err
 	}
 	if i, err := strconv.Atoi(request); err == nil {
@@ -59,8 +65,8 @@ func (bi *botInterface) years() (str []string) {
 func (bi *botInterface) SelectYear(msg *tgbotapi.MessageConfig) {
 	request := bi.years()
 	bi.button = buttons.New(request, 2, 5, 0)
-	bi.requestType[msg.ChatID] = "year"
-	bi.test.SetRequest(msg.ChatID, request)
+	bi.requestType = "year"
+	bi.test.SetRequest(request)
 	bi.button.OpenButtonsBar(msg)
 }
 
@@ -80,8 +86,8 @@ func (bi *botInterface) Months() ([]string, int) {
 func (bi *botInterface) SelectMonth(msg *tgbotapi.MessageConfig) {
 	request, spaceBeforeStart := bi.Months()
 	bi.button = buttons.New(request, 4, 3, spaceBeforeStart)
-	bi.requestType[msg.ChatID] = "month"
-	bi.test.SetRequest(msg.ChatID, request)
+	bi.requestType = "month"
+	bi.test.SetRequest(request)
 	bi.button.OpenButtonsBar(msg)
 }
 
@@ -109,9 +115,7 @@ func (bi *botInterface) CreateDaysButtons() {
 
 func (bi *botInterface) Days() ([]string, int) {
 	allDaysInMonth := bi.MakeMonthDayNumbersInStringArray()
-	fmt.Println(bi.date.GetMonth())
-	fmt.Println(bi.date.GetYear())
-	if time.Now().Month().String() == date.GetAllMonths()[bi.date.GetMonth()-1] {
+	if time.Now().Month().String() == date.GetAllMonths()[bi.date.GetMonth()-1] && bi.date.GetYear() == time.Now().Year() {
 		correctDay := strconv.Itoa(time.Now().Day())
 		for i, day := range allDaysInMonth {
 			if day == correctDay {
@@ -125,14 +129,14 @@ func (bi *botInterface) Days() ([]string, int) {
 func (bi *botInterface) SelectDay(msg *tgbotapi.MessageConfig) {
 	request, spaceBeforeStart := bi.Days()
 	bi.button = buttons.New(request, bi.CountLine(), bi.date.GetDayInWeek(), spaceBeforeStart)
-	bi.requestType[msg.ChatID] = "day"
-	bi.test.SetRequest(msg.ChatID, request)
+	bi.requestType = "day"
+	bi.test.SetRequest(request)
 	bi.button.OpenButtonsBar(msg)
 }
 
 func (bi *botInterface) GetInputRequest(msg *tgbotapi.MessageConfig, request string) error {
 	var err error
-	switch bi.requestType[msg.ChatID] {
+	switch bi.requestType {
 	case "year":
 		tmp := bi.SetYear
 		if err = bi.CompleteRequest(tmp, msg, request); err != nil {
@@ -141,7 +145,7 @@ func (bi *botInterface) GetInputRequest(msg *tgbotapi.MessageConfig, request str
 		bi.SelectMonth(msg)
 		msg.Text = "Choose the Month"
 	case "month":
-		if err = bi.test.TestInput(msg.ChatID, request); err != nil {
+		if err = bi.test.TestInput(request); err != nil {
 			return err
 		}
 		for i, month := range date.GetAllMonths() {
@@ -156,23 +160,7 @@ func (bi *botInterface) GetInputRequest(msg *tgbotapi.MessageConfig, request str
 		if err = bi.CompleteRequest(tmp, msg, request); err != nil {
 			return err
 		}
-		bi.CloseSelector(msg)
+		bi.button.CloseButtonsBar(msg)
 	}
 	return err
-}
-
-func New() BotInterface {
-	tmp := new(botInterface)
-	tmp.date = date.New()
-	tmp.test = testInput.New()
-	tmp.requestType = make(map[int64]string)
-	return tmp
-}
-
-func (bi *botInterface) OpenSelector(msg *tgbotapi.MessageConfig) {
-	bi.button.OpenButtonsBar(msg)
-}
-
-func (bi *botInterface) CloseSelector(msg *tgbotapi.MessageConfig) {
-	bi.button.CloseButtonsBar(msg)
 }

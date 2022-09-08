@@ -15,13 +15,9 @@ type tgStruct struct {
 
 func (tg *tgStruct) Error(err error) {
 	tg.msg.Text = err.Error()
-	//tg.msg.ReplyToMessageID = tg.update.Message.MessageID
-	//if _, err := tg.bot.Send(tg.msg); err != nil {
-	//	log.Panic(err)
-	//}
 }
 
-func (tg *tgStruct) SelectYear(bot botInterface.BotInterface) {
+func (tg *tgStruct) Start(bot botInterface.BotInterface) {
 	bot.SelectYear(&tg.msg)
 	tg.msg.Text = "Choose the Year"
 }
@@ -59,15 +55,18 @@ func main() {
 	u.Timeout = 60
 
 	updates := tg.bot.GetUpdatesChan(u)
-	bot := botInterface.New()
+	bot := make(map[int64]botInterface.BotInterface)
 	for tg.update = range updates {
 		tg.msg = tgbotapi.NewMessage(tg.update.Message.Chat.ID, tg.update.Message.Text)
 		if tg.update.Message != nil {
+			if _, test := bot[tg.update.Message.Chat.ID]; !test {
+				bot[tg.update.Message.Chat.ID] = botInterface.New()
+			}
 			switch tg.update.Message.Text {
 			case "/start":
-				tg.SelectYear(bot)
+				tg.Start(bot[tg.update.Message.Chat.ID])
 			default:
-				err = bot.GetInputRequest(&tg.msg, tg.update.Message.Text)
+				err = bot[tg.update.Message.Chat.ID].GetInputRequest(&tg.msg, tg.update.Message.Text)
 				if err != nil {
 					tg.Error(err)
 				}
