@@ -1,6 +1,7 @@
 package botInterface
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"goLangBot/botInterface/buttons"
 	"goLangBot/botInterface/date"
@@ -161,6 +162,7 @@ func (bi *botInterface) GetInputRequest(msg *tgbotapi.MessageConfig, request str
 			return err
 		}
 		bi.button.CloseButtonsBar(msg)
+		msg.Text = fmt.Sprintf("Your date is %d/%d/%d", bi.date.GetYear(), bi.date.GetMonth(), bi.date.GetDay())
 	}
 	return err
 }

@@ -57,23 +57,25 @@ func main() {
 	updates := tg.bot.GetUpdatesChan(u)
 	bot := make(map[int64]botInterface.BotInterface)
 	for tg.update = range updates {
-		tg.msg = tgbotapi.NewMessage(tg.update.Message.Chat.ID, tg.update.Message.Text)
 		if tg.update.Message != nil {
-			if _, test := bot[tg.update.Message.Chat.ID]; !test {
-				bot[tg.update.Message.Chat.ID] = botInterface.New()
-			}
-			switch tg.update.Message.Text {
-			case "/start":
-				tg.Start(bot[tg.update.Message.Chat.ID])
-			default:
-				err = bot[tg.update.Message.Chat.ID].GetInputRequest(&tg.msg, tg.update.Message.Text)
-				if err != nil {
-					tg.Error(err)
+			tg.msg = tgbotapi.NewMessage(tg.update.Message.Chat.ID, tg.update.Message.Text)
+			if tg.update.Message != nil {
+				if _, test := bot[tg.update.Message.Chat.ID]; !test {
+					bot[tg.update.Message.Chat.ID] = botInterface.New()
 				}
-			}
-			tg.msg.ReplyToMessageID = tg.update.Message.MessageID
-			if _, err := tg.bot.Send(tg.msg); err != nil {
-				log.Panic(err)
+				switch tg.update.Message.Text {
+				case "/start":
+					tg.Start(bot[tg.update.Message.Chat.ID])
+				default:
+					err = bot[tg.update.Message.Chat.ID].GetInputRequest(&tg.msg, tg.update.Message.Text)
+					if err != nil {
+						tg.Error(err)
+					}
+				}
+				tg.msg.ReplyToMessageID = tg.update.Message.MessageID
+				if _, err := tg.bot.Send(tg.msg); err != nil {
+					log.Panic(err)
+				}
 			}
 		}
 	}

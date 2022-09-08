@@ -27,6 +27,7 @@ type Date interface {
 	SetDay(day int)
 	GetYear() int
 	GetMonth() int
+	GetDay() int
 	GetMonthStartWeekDay() int
 	GetMaxDayInMonth() int
 	GetDayInWeek() int
@@ -41,6 +42,10 @@ func (d date) GetYear() int {
 }
 func (d date) GetMonth() int {
 	return d.month
+}
+
+func (d date) GetDay() int {
+	return d.day
 }
 
 func (d *date) setDayInWeek() {
