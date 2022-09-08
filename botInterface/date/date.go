@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+func GetAllMonths() []string {
+	return []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+}
+
 type date struct {
 	year              int
 	month             int
@@ -21,6 +25,8 @@ type Date interface {
 	SetYear(year int)
 	SetMonth(month int)
 	SetDay(day int)
+	GetYear() int
+	GetMonth() int
 	GetMonthStartWeekDay() int
 	GetMaxDayInMonth() int
 	GetDayInWeek() int
@@ -28,6 +34,13 @@ type Date interface {
 
 func New() Date {
 	return &date{}
+}
+
+func (d date) GetYear() int {
+	return d.year
+}
+func (d date) GetMonth() int {
+	return d.month
 }
 
 func (d *date) setDayInWeek() {

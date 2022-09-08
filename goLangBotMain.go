@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	_ "github.com/lib/pq"
 	"goLangBot/botInterface"
@@ -14,13 +13,17 @@ type tgStruct struct {
 	update tgbotapi.Update
 }
 
+func (tg *tgStruct) Error(err error) {
+	tg.msg.Text = err.Error()
+	//tg.msg.ReplyToMessageID = tg.update.Message.MessageID
+	//if _, err := tg.bot.Send(tg.msg); err != nil {
+	//	log.Panic(err)
+	//}
+}
+
 func (tg *tgStruct) SelectYear(bot botInterface.BotInterface) {
 	bot.SelectYear(&tg.msg)
 	tg.msg.Text = "Choose the Year"
-	tg.msg.ReplyToMessageID = tg.update.Message.MessageID
-	if _, err := tg.bot.Send(tg.msg); err != nil {
-		log.Panic(err)
-	}
 }
 
 func main() {
@@ -64,12 +67,14 @@ func main() {
 			case "/start":
 				tg.SelectYear(bot)
 			default:
-				bot.GetInputRequest(&tg.msg, tg.update.Message.Text)
-				tg.msg.Text = fmt.Sprintf("year whos coose %s", tg.update.Message.Text)
-				tg.msg.ReplyToMessageID = tg.update.Message.MessageID
-				if _, err := tg.bot.Send(tg.msg); err != nil {
-					log.Panic(err)
+				err = bot.GetInputRequest(&tg.msg, tg.update.Message.Text)
+				if err != nil {
+					tg.Error(err)
 				}
+			}
+			tg.msg.ReplyToMessageID = tg.update.Message.MessageID
+			if _, err := tg.bot.Send(tg.msg); err != nil {
+				log.Panic(err)
 			}
 		}
 	}
